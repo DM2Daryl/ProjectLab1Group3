@@ -4,7 +4,7 @@ import machine
 from machine import Pin, ADC, PWM
 from Mdriver import MotorDriver
 from tcs34725 import *
-from hcsr04 import * 
+from hcsr04 import *
 
 # ─── Hardware setup ──────────────────────────────────────────────────────────
 motors = MotorDriver()
@@ -24,7 +24,7 @@ def set_kicker_us(us):
 REST         = 1480
 WINDUP       = 2400
 KICK_BACK    = 900
-KICK_FORWARD = 3500
+KICK_FORWARD = 2000
 
 print("Initializing servos...")
 set_servo_us(REST)
@@ -65,7 +65,6 @@ consecutive    = 0
 last_color     = "-"
 color_interrupt = None   # set by wait_ms() when a color is locked mid-maneuver
 
-
 #   OVERCURRENT SETUP
 
 SenseA = Pin(14, Pin.IN, Pin.PULL_UP)
@@ -83,7 +82,31 @@ def check_overcurrent():
         overcurrent_interrupt = True
         return True
     return False
+
+#UltraSonic Setup
+ #distance for stop, in cm. 
+StopDist = 15 
+
+HYSTERESIS = 3
+ErrorDist = 250 
+
+def get_distance():
+    d1 = sensor.distance_cm()
+    sleep_us(25000)
+    d2 = sensor.distance_cm()
+
+    # If either reading is a 250 cm (failure) reading, don't return the values.
+    if d1 == ErrorDist or d2 == ErrorDist:
+        return None, d1, d2
+
+    return (d1 + d2) / 2, d1, d2 
+
     
+'''
+Once stopped (only if stopped by the ultrasonic) if the distance > StopDist + Hysteresis Buffer ,its safe to start moving again
+
+
+'''
 # ════════════════════════════════════════════════════════════════════════════
 # COLOR SENSOR
 # ════════════════════════════════════════════════════════════════════════════
