@@ -83,23 +83,35 @@ def check_overcurrent():
         return True
     return False
 
-#UltraSonic Setup
+# ULTRASONIC Setup
  #distance for stop, in cm. 
 StopDist = 15 
-
 HYSTERESIS = 3
-ErrorDist = 250 
-
-def get_distance():
+ErrorDist = 250
+ultrasonic_blocked = False #Ultrasonic Interrupt 
+sensor = HCSR04(trigger_pin = 22,  echo_pin = 21) 
+def check_ultrasonic():
+    global ultrasonic_blocked
     d1 = sensor.distance_cm()
     sleep_us(25000)
     d2 = sensor.distance_cm()
 
     # If either reading is a 250 cm (failure) reading, don't return the values.
     if d1 == ErrorDist or d2 == ErrorDist:
-        return None, d1, d2
+        print("Error Distance")
+        motors.Stop(0)
+        ultrasonic_blocked = True
+        return True
 
-    return (d1 + d2) / 2, d1, d2 
+    distance = (d1 + d2) / 2
+    
+    #if 
+    if distance <= StopDist:
+        print("Collision avoidance stop")
+        motors.Stop(0)
+        ultrasonic_blocked = True
+        return True
+    
 
     
 '''
