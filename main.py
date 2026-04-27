@@ -5,7 +5,6 @@ from machine import Pin, ADC, PWM
 from Mdriver import MotorDriver
 from tcs34725 import *
 from hcsr04 import * 
-#Test Add
 
 # ─── Hardware setup ──────────────────────────────────────────────────────────
 motors = MotorDriver()
@@ -25,7 +24,7 @@ def set_kicker_us(us):
 REST         = 1480
 WINDUP       = 2400
 KICK_BACK    = 900
-KICK_FORWARD = 2000
+KICK_FORWARD = 3500
 
 print("Initializing servos...")
 set_servo_us(REST)
