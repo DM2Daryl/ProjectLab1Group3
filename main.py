@@ -41,16 +41,15 @@ SAMPLES       = 2 #ir sensors are already presampled within the hardware but jus
 DETECT_THRESH = 40250 #decrease in order to see further, increase if triggering for no reason.
 WIDE_MARGIN   = 3000 #if the two IR sensors are within 3000 adc values of each other 
 
-SEARCH_SPEED  = 45
+SEARCH_SPEED  = 60
 TURN_SPEED    = 55
-FORWARD_SPEED = 50
-TURN_MS       = 600
+FORWARD_SPEED = 70
+COLOR_DRIVE_SPEED = 50 #placeholders, can be removed. They were here mainly because once the ball is obtained there isn't a way to know what to do 
+COLOR_DRIVE_MS    = 1000 #placeholder 
+COLOR_PAUSE_MS    = 3000 #placeholder 
 FORWARD_MS    = 2000
 SETTLE_MS     = 450
-
-COLOR_DRIVE_SPEED = 50 #placeholders, can be removed. They were here mainly because once the ball is obtained there isn't a way to know what to do 
-COLOR_DRIVE_MS    = 1000
-COLOR_PAUSE_MS    = 3000
+TURN_MS       = 600
 
 # ─── Color sensor setup ──────────────────────────────────────────────────────
 tcs = TCS34725(scl=Pin(5), sda=Pin(4))
@@ -239,12 +238,12 @@ def forward_check(speed, duration):
     while elapsed < duration:
         utime.sleep_ms(step)
         elapsed += step
-        #if check_overcurrent():
-         #   return False
-        if check_ultrasonic():
-            return False
         if check_overcurrent():
             return False
+        if check_ultrasonic():
+            return False
+        #if check_overcurrent():
+         #   return False
         if obj_in_front():
             motors.Stop(0)
             return True
@@ -460,7 +459,7 @@ while True: #the while loop here is done by priority of tasks to accomplish
         print("Nothing detected — searching")
         motors.Forward(SEARCH_SPEED)
         if check_ultrasonic(): continue 
-        if check_overcurrent(): continue
+        #if check_overcurrent(): continue
         if wait_ms(500): continue
         motors.Stop(0)
         if ir_detected(): continue
