@@ -95,22 +95,19 @@ def check_ultrasonic():
     d1 = sensor.distance_cm()
     sleep_us(25000)
     d2 = sensor.distance_cm()
-
-    # If either reading is a 250 cm (failure) reading, don't return the values.
-    if d1 == ErrorDist or d2 == ErrorDist:
-        print("Error Distance")
-        motors.Stop(0)
-        ultrasonic_blocked = True
-        return True
-
     distance = (d1 + d2) / 2
-    
-    #if 
     if distance <= StopDist:
         print("Collision avoidance stop")
         motors.Stop(0)
         ultrasonic_blocked = True
         return True
+    
+     # Hysteresis: only clear the block once far enough away
+    if ultrasonic_blocked and distance < StopDist + HYSTERESIS:
+        return True   # still too close, stay stopped
+
+    ultrasonic_blocked = False
+    return False
     
 
     
@@ -198,6 +195,10 @@ def wait_ms(duration):
         chunk = min(100, duration - elapsed)  # don't overshoot
         utime.sleep_ms(chunk)
         elapsed += chunk
+        #if check_overcurrent(): # this check overcurrent makes it so that the rover keeps stopping whenever it's even doing its search function. 
+         #   return True #unless some way is found to mitigate this it'll stay like this for now 
+        if check_ultrasonic():
+            return True
         locked = check_color()
         if locked != "-":
             color_interrupt = locked
@@ -238,6 +239,10 @@ def forward_check(speed, duration):
     while elapsed < duration:
         utime.sleep_ms(step)
         elapsed += step
+        #if check_overcurrent():
+         #   return False
+        if check_ultrasonic():
+            return False
         if check_overcurrent():
             return False
         if obj_in_front():
@@ -407,9 +412,13 @@ while True: #the while loop here is done by priority of tasks to accomplish
     '''
     
     if overcurrent_interrupt:
-        print("Recovering from overcurrent — waiting 2s")
-        utime.sleep_ms(2000)
+        print("Recovering from overcurrent — waiting 1.5s")
+        utime.sleep_ms(1500)
         overcurrent_interrupt = False
+        continue
+    
+    if check_ultrasonic():
+        utime.sleep_ms(100)
         continue
     
     # If a color was locked mid-maneuver by wait_ms(), handle it now
@@ -450,18 +459,21 @@ while True: #the while loop here is done by priority of tasks to accomplish
     else:
         print("Nothing detected — searching")
         motors.Forward(SEARCH_SPEED)
+        if check_ultrasonic(): continue 
         if check_overcurrent(): continue
         if wait_ms(500): continue
         motors.Stop(0)
         if ir_detected(): continue
         if wait_ms(200): continue
         motors.TurnRight(TURN_SPEED)
+        if check_ultrasonic(): continue
         if check_overcurrent(): continue
         if wait_ms(400): continue
         motors.Stop(0)
         if ir_detected(): continue
         if wait_ms(200): continue
         motors.TurnLeft(TURN_SPEED)
+        if check_ultrasonic(): continue
         if check_overcurrent(): continue
         if wait_ms(500): continue
         motors.Stop(0)
