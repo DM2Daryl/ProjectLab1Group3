@@ -1,6 +1,5 @@
-- Implement Ultrasonic Collison Avoidance w/ Code 
-- Make sure Overcurrent Works during search function
-- Decrease Overcurrent Sensitivity, as of now once the rover moves a bit it sees a one on the overcurrent pin too much 
+- Ensure Overcurrent Works during search function 
+- Ensure Overcurrent Sensitivity is tuned as needed 
 - (tentative) make ability to turn to a certain degree using IMU 
 - Make sure that things are being checked for multiple times - interrupt like 
-- Location Mapping 
+- Location Mapping using speed sensors 
