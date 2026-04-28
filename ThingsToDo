@@ -2,3 +2,4 @@
 - Make sure Overcurrent Works during search function
 - (tentative) make ability to turn to a certain degree using IMU 
 - Make sure that things are being checked for multiple times - interrupt like 
+- Location Mapping 
