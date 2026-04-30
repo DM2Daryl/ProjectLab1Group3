@@ -43,11 +43,11 @@ class MotorDriver:
             self.ch3.value(0)
             self.ch4.value(0)
         elif direction == 1:
-            self.ch3.value(0)
-            self.ch4.value(1)
-        elif direction == 2:
             self.ch3.value(1)
             self.ch4.value(0)
+        elif direction == 2:
+            self.ch3.value(0)
+            self.ch4.value(1)
         elif direction == 3:
             self.ch3.value(1)
             self.ch4.value(1)
