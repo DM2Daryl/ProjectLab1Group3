@@ -6,6 +6,29 @@ from Mdriver import MotorDriver
 from tcs34725 import *
 from hcsr04 import *
 
+button = Pin(10, Pin.IN, Pin.PULL_UP)
+
+MODE_KICKER = 0
+MODE_GOALIE = 1
+current_mode = MODE_KICKER   # start in kicker mode by default
+
+
+last_press_ms = 0
+
+def button_isr(pin):
+    global current_mode, last_press_ms
+    now = utime.ticks_ms()
+    if utime.ticks_diff(now, last_press_ms) < 300:   # ignore presses within 300ms
+        return
+    last_press_ms = now
+    current_mode = MODE_GOALIE if current_mode == MODE_KICKER else MODE_KICKER
+    print("Mode:", "GOALIE" if current_mode == MODE_GOALIE else "KICKER")
+
+
+button.irq(trigger=Pin.IRQ_FALLING, handler=button_isr)
+
+
+
 # ─── Hardware setup ──────────────────────────────────────────────────────────
 motors = MotorDriver()
 button = Pin(10, Pin.IN, Pin.PULL_DOWN)
@@ -24,7 +47,7 @@ def set_kicker_us(us):
 REST         = 1480
 WINDUP       = 2400
 KICK_BACK    = 900
-KICK_FORWARD = 2000
+KICK_FORWARD = 2200
 
 print("Initializing servos...")
 set_servo_us(REST)
@@ -261,9 +284,13 @@ def both_trig():
     global color_interrupt
     print("WIDE OBJECT — reversing and turning away")
     motors.Reverse(SEARCH_SPEED)
-    if wait_ms(800): return
+    if wait_ms(800):
+        motors.Stop(0)
+        return
     motors.TurnLeft(TURN_SPEED)
-    if wait_ms(800): return
+    if wait_ms(800):
+        motors.Stop(0)
+        return
     motors.Stop(0)
     wait_ms(SETTLE_MS)
 
@@ -400,15 +427,24 @@ while True: #the while loop here is done by priority of tasks to accomplish
     
     #ideal
     '''
+    0.(IRQ) Encoder handling
+    0.5 IMU distance tracking? should go w/ encoder stuff 
     1. Overcurrent
     2. Ultrasonic Distance
     3. Color Sensing
-    3.5? Tentative , where to go once a ball is confirmed 
+    3.5? Tentative Location mapping , where to go once a ball is confirmed, should be based off of 0.5 
     4. IR Search function
 
 
 
     '''
+    
+    if current_mode == MODE_GOALIE:
+        motors.Forward(60)
+        utime.sleep(1)
+        motors.Reverse(60)
+        utime.sleep(1)
+        continue   # loop back immediately, no other logic runs
     
     if overcurrent_interrupt:
         print("Recovering from overcurrent — waiting 1.5s")
@@ -434,7 +470,7 @@ while True: #the while loop here is done by priority of tasks to accomplish
         on_color_locked(locked)
         continue
 
-    # IR logic
+    # IR logic and search function 
     r, l  = read_ir()
     r_det = r > DETECT_THRESH
     l_det = l > DETECT_THRESH
@@ -478,3 +514,6 @@ while True: #the while loop here is done by priority of tasks to accomplish
         motors.Stop(0)
         if ir_detected(): continue
         wait_ms(SETTLE_MS)
+
+
+
