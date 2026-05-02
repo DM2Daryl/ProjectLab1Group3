@@ -29,7 +29,6 @@ button.irq(trigger=Pin.IRQ_FALLING, handler=button_isr)
 
 # ─── Hardware setup ──────────────────────────────────────────────────────────
 motors = MotorDriver()
-Pulley = MotorDriver()
 button = Pin(10, Pin.IN, Pin.PULL_DOWN)
 
 servo  = PWM(Pin(0))
@@ -162,7 +161,6 @@ def check_ultrasonic_back():
     ''' 
 
 
-# PULLEY SETUP
 
 
 
@@ -454,15 +452,6 @@ def on_color_locked(color):
             set_servo_us(pos)
             utime.sleep(0.02)
         set_servo_us(REST)
-        print("RAISING PULLEY")
-        Pulley.PulleyMotor(1,20)# pulls up 
-        utime.sleep(2)
-        Pulley.PulleyMotor(0,0)
-        kick_ball()
-        utime.sleep_ms(50)
-        Pulley.PulleyMotor(2,20)# rolls it back down
-        utime.sleep(2)
-        Pulley.PulleyMotor(0,0)
         color_interrupt = None
         return 
 
@@ -474,15 +463,6 @@ def on_color_locked(color):
             set_servo_us(pos)
             utime.sleep(0.02)
         set_servo_us(REST)
-        print("RAISING PULLEY")
-        Pulley.PulleyMotor(1,20)# pulls up 
-        utime.sleep(2)
-        Pulley.PulleyMotor(0,0)
-        kick_ball()
-        utime.sleep_ms(50)
-        Pulley.PulleyMotor(2,20)# rolls it back down
-        utime.sleep(2)
-        Pulley.PulleyMotor(0,0)
         color_interrupt = None
         return
 
