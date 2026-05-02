@@ -27,10 +27,9 @@ def button_isr(pin):
 
 button.irq(trigger=Pin.IRQ_FALLING, handler=button_isr)
 
-
-
 # ─── Hardware setup ──────────────────────────────────────────────────────────
 motors = MotorDriver()
+Pulley = MotorDriver()
 button = Pin(10, Pin.IN, Pin.PULL_DOWN)
 
 servo  = PWM(Pin(0))
@@ -54,6 +53,8 @@ set_servo_us(REST)
 utime.sleep(1)
 set_kicker_us(KICK_BACK)
 utime.sleep(1)
+
+
 
 # ─── IR setup ────────────────────────────────────────────────────────────────
 right_adc = machine.ADC(0)
@@ -130,7 +131,40 @@ def check_ultrasonic():
 
     ultrasonic_blocked = False
     return False
-    
+
+
+#ULTRASONIC ON THE BACK
+
+# add with your other ultrasonic setup
+#sensor_back = HCSR04(trigger_pin=XX, echo_pin=XX)  # fill in your actual pins
+ultrasonic_back_blocked = False
+'''
+def check_ultrasonic_back():
+    """Same logic as check_ultrasonic() but for the rear sensor."""
+    global ultrasonic_back_blocked
+    d1 = sensor_back.distance_cm()
+    sleep_us(25000)
+    d2 = sensor_back.distance_cm()
+
+    distance = (d1 + d2) / 2
+
+    if distance <= StopDist:
+        print(f"Rear collision avoidance stop — {distance:.1f} cm")
+        motors.Stop(0)
+        ultrasonic_back_blocked = True
+        return True
+
+    if ultrasonic_back_blocked and distance < StopDist + HYSTERESIS:
+        return True
+
+    ultrasonic_back_blocked = False
+    return False
+    ''' 
+
+
+# PULLEY SETUP
+
+
 
     
 '''
@@ -160,7 +194,7 @@ def rgb_to_hsv(r, g, b):
     return int(h), int(s), int(v)
 
 def hsv_to_color_name(h, s, v):
-    if s < 45 or v < 20: #values are like this due to random green bias in the lab room. 
+    if s < 45 or v < 5: #values are like this due to random green bias in the lab room. 
         return "-"
     if h < 20 or h >= 340:
         return "Red"
@@ -226,7 +260,27 @@ def wait_ms(duration):
             color_interrupt = locked
             return True   # interrupted — caller should stop and bail
     return False           # completed normally
-
+'''
+def wait_ms_reverse(duration):
+    """
+    Same as wait_ms but checks the rear sensor instead of the front.
+    Use this anywhere motors.Reverse() is running.
+    """
+    global color_interrupt
+    elapsed = 0
+    while elapsed < duration:
+        chunk = min(100, duration - elapsed)
+        utime.sleep_ms(chunk)
+        elapsed += chunk
+        if check_overcurrent():
+            return True
+        if check_ultrasonic_back():   # rear sensor only
+            return True
+        locked = check_color()
+        if locked != "-":
+            color_interrupt = locked
+            return True
+    return False '''
 # ════════════════════════════════════════════════════════════════════════════
 # IR SENSORS
 # ════════════════════════════════════════════════════════════════════════════
@@ -284,9 +338,9 @@ def both_trig():
     global color_interrupt
     print("WIDE OBJECT — reversing and turning away")
     motors.Reverse(SEARCH_SPEED)
-    if wait_ms(800):
-        motors.Stop(0)
-        return
+    #if wait_ms_reverse(800):
+        #motors.Stop(0)
+        #return
     motors.TurnLeft(TURN_SPEED)
     if wait_ms(800):
         motors.Stop(0)
@@ -394,18 +448,43 @@ def on_color_locked(color):
 
     if color == "Red":
         print("RED BALL — kicking!")
-        for pos in range(WINDUP, REST, -20):
+        #Location stuff?? - go to here, do this , etc
+        
+        for pos in range(WINDUP, REST, -20): #OPENS servo 
             set_servo_us(pos)
             utime.sleep(0.02)
         set_servo_us(REST)
+        print("RAISING PULLEY")
+        Pulley.PulleyMotor(1,20)# pulls up 
+        utime.sleep(2)
+        Pulley.PulleyMotor(0,0)
         kick_ball()
+        utime.sleep_ms(50)
+        Pulley.PulleyMotor(2,16)# rolls it back down
+        utime.sleep(2)
+        Pulley.PulleyMotor(0,0)
         color_interrupt = None
         return 
 
     elif color in ("Blue", "Green"):
-        motors.Forward(FORWARD_SPEED)
-        utime.sleep(1)
-        motors.Stop(0)
+        print("GOOD BALL !!! GOING TO OWN GOAL ")
+        motors.Forward(FORWARD_SPEED) #placeholder, but this should hold the code that goes to the area 
+        #Go towards team area
+        for pos in range(WINDUP, REST, -20): #OPENS servo 
+            set_servo_us(pos)
+            utime.sleep(0.02)
+        set_servo_us(REST)
+        print("RAISING PULLEY")
+        Pulley.PulleyMotor(1,20)# pulls up 
+        utime.sleep(2)
+        Pulley.PulleyMotor(0,0)
+        kick_ball()
+        utime.sleep_ms(50)
+        Pulley.PulleyMotor(2,16)# rolls it back down
+        utime.sleep(2)
+        Pulley.PulleyMotor(0,0)
+        color_interrupt = None
+        return
 
     print("Opening claw — resuming search")
     for pos in range(WINDUP, REST, -20):
@@ -443,7 +522,7 @@ while True: #the while loop here is done by priority of tasks to accomplish
         motors.Forward(60)
         utime.sleep(1)
         motors.Reverse(60)
-        utime.sleep(1)
+        wait_ms_reverse(1000)
         continue   # loop back immediately, no other logic runs
     
     if overcurrent_interrupt:
