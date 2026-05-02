@@ -43,9 +43,9 @@ def set_servo_us(us):
 def set_kicker_us(us):
     kicker.duty_u16(int(us * 65535 / 20000))
 
-REST         = 1480
+REST         = 1600
 WINDUP       = 2400
-KICK_BACK    = 900
+KICK_BACK    = 1050
 KICK_FORWARD = 2200
 
 print("Initializing servos...")
