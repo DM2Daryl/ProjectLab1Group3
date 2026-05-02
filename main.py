@@ -6,7 +6,7 @@ from Mdriver import MotorDriver
 from tcs34725 import *
 from hcsr04 import *
 
-button = Pin(10, Pin.IN, Pin.PULL_UP)
+button = Pin(1, Pin.IN, Pin.PULL_UP)
 
 MODE_KICKER = 0
 MODE_GOALIE = 1
@@ -29,7 +29,6 @@ button.irq(trigger=Pin.IRQ_FALLING, handler=button_isr)
 
 # ─── Hardware setup ──────────────────────────────────────────────────────────
 motors = MotorDriver()
-button = Pin(10, Pin.IN, Pin.PULL_DOWN)
 
 servo  = PWM(Pin(0))
 servo.freq(50)
@@ -43,7 +42,7 @@ def set_kicker_us(us):
     kicker.duty_u16(int(us * 65535 / 20000))
 
 REST         = 1600
-WINDUP       = 2400
+WINDUP       = 2700
 KICK_BACK    = 1050
 KICK_FORWARD = 2200
 
@@ -225,7 +224,7 @@ def check_color():
     else:
         consecutive = 1
         last_color  = color
-    if consecutive >= 3:
+    if consecutive >= 2:
         locked      = last_color
         consecutive = 0
         last_color  = "-"
@@ -447,10 +446,14 @@ def on_color_locked(color):
     if color == "Red":
         print("RED BALL — kicking!")
         #Location stuff?? - go to here, do this , etc
-        
+        motors.TurnRight(TURN_SPEED)
+        utime.sleep(2.75)
+        motors.Forward(FORWARD_SPEED)
+        utime.sleep(1.5)
         for pos in range(WINDUP, REST, -20): #OPENS servo 
             set_servo_us(pos)
             utime.sleep(0.02)
+        kick_ball()
         set_servo_us(REST)
         color_interrupt = None
         return 
@@ -458,10 +461,11 @@ def on_color_locked(color):
     elif color in ("Blue", "Green"):
         print("GOOD BALL !!! GOING TO OWN GOAL ")
         motors.Forward(FORWARD_SPEED) #placeholder, but this should hold the code that goes to the area 
-        #Go towards team area
+        utime.sleep(2)
         for pos in range(WINDUP, REST, -20): #OPENS servo 
             set_servo_us(pos)
             utime.sleep(0.02)
+        kick_ball()
         set_servo_us(REST)
         color_interrupt = None
         return
@@ -508,8 +512,8 @@ while True: #the while loop here is done by priority of tasks to accomplish
         continue   # loop back immediately, no other logic runs
     
     if overcurrent_interrupt:
-        print("Recovering from overcurrent — waiting 1.5s")
-        utime.sleep_ms(1500)
+        print("Recovering from overcurrent — waiting 0.4s")
+        utime.sleep_ms(400)
         overcurrent_interrupt = False
         continue
     
