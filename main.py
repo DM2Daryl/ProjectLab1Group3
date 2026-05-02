@@ -460,7 +460,7 @@ def on_color_locked(color):
         Pulley.PulleyMotor(0,0)
         kick_ball()
         utime.sleep_ms(50)
-        Pulley.PulleyMotor(2,16)# rolls it back down
+        Pulley.PulleyMotor(2,20)# rolls it back down
         utime.sleep(2)
         Pulley.PulleyMotor(0,0)
         color_interrupt = None
@@ -480,7 +480,7 @@ def on_color_locked(color):
         Pulley.PulleyMotor(0,0)
         kick_ball()
         utime.sleep_ms(50)
-        Pulley.PulleyMotor(2,16)# rolls it back down
+        Pulley.PulleyMotor(2,20)# rolls it back down
         utime.sleep(2)
         Pulley.PulleyMotor(0,0)
         color_interrupt = None
@@ -522,7 +522,9 @@ while True: #the while loop here is done by priority of tasks to accomplish
         motors.Forward(60)
         utime.sleep(1)
         motors.Reverse(60)
-        wait_ms_reverse(1000)
+        utime.sleep(1)
+
+        #wait_ms_reverse(1000)
         continue   # loop back immediately, no other logic runs
     
     if overcurrent_interrupt:
@@ -570,9 +572,9 @@ while True: #the while loop here is done by priority of tasks to accomplish
     elif l_det:
         left_trig()
 
-    else:
+    else: #search function 
         print("Nothing detected — searching")
-        motors.Forward(SEARCH_SPEED)
+        motors.Forward(FORWARD_SPEED)
         if check_ultrasonic(): continue 
         #if check_overcurrent(): continue
         if wait_ms(500): continue
