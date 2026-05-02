@@ -1,6 +1,3 @@
 - Ensure Overcurrent Works during search function 
 - Ensure Overcurrent Sensitivity is tuned as needed 
-- Add Overcurrent During reverse
-- (tentative) make ability to turn to a certain degree using IMU 
-- Make sure that things are being checked for multiple times - interrupt like 
-- Location Mapping using speed sensors 
+- Compile Code w/ Location Mapping, test rover 
