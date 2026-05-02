@@ -12,11 +12,33 @@ class MotorDriver:
         self.en2 = Pin(20, Pin.OUT)
         self.ch3 = Pin(19, Pin.OUT)
         self.ch4 = Pin(18, Pin.OUT)
+        
+        self.enp1 = Pin(6, Pin.OUT)
+        self.pch1 = Pin(7, Pin.OUT)
+        self.pch2 = Pin(8, Pin.OUT)
 
         self.button = Pin(10, Pin.IN, Pin.PULL_DOWN)
 
         self.LMspeed = PWM(self.en1)
         self.RMspeed = PWM(self.en2)
+        self.Pspeed = PWM(self.enp1)
+    
+    def PulleyMotor(self, direction, speed):
+        self.Pspeed.freq(500)
+        self.Pspeed.duty_u16(int((speed/100)*65535))
+        
+        if direction == 0:
+            self.pch1.value(0)
+            self.pch2.value(0)
+        elif direction == 1:
+            self.pch1.value(0)
+            self.pch2.value(1)
+        elif direction == 2:
+            self.pch1.value(1)
+            self.pch2.value(0)
+        elif direction == 3:
+            self.pch1.value(1)
+            self.pch2.value(1)
 
     def LeftMotor(self, direction, speed):
         self.LMspeed.freq(1000)
@@ -54,11 +76,11 @@ class MotorDriver:
 
     def Forward(self, speed):
         self.LeftMotor(2, speed)
-        self.RightMotor(2, speed)
+        self.RightMotor(2, speed+9)
 
     def Reverse(self, speed):
         self.LeftMotor(1, speed)
-        self.RightMotor(1, speed)
+        self.RightMotor(1, speed+9)
 
     def Coast(self, speed):
         self.LeftMotor(0, speed)
@@ -70,9 +92,9 @@ class MotorDriver:
 
     def TurnLeft(self, speed):
         self.LeftMotor(1, speed)
-        self.RightMotor(2, speed)
+        self.RightMotor(2, speed+9)
 
     def TurnRight(self, speed):
         self.LeftMotor(2, speed)
-        self.RightMotor(1, speed)
+        self.RightMotor(1, speed+9)
 
